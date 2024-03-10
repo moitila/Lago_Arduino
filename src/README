@@ -1,0 +1,45 @@
+Equipamentos utilizados.
+
+* Arduino Uno
+* ESP01
+* Fonte HW-131, 5V 3,3V
+* Modulo Conversor Nivel Logico Bidirecional 4 Canais 3.3v 5v
+* Protoboard
+* Adaptador Usb Para Módulo Wifi Esp8266 Esp-01
+
+/*
+Modelo simplificado 
+
+Arduino Uno     Módulo Conversor de Nível Lógico     ESP01
++--------+      +------------------+                +-----+
+|        |      |                  |                |     |
+|     GND|------|GND           GND |----------------|GND  |
+|        |      |                  |                |     |
+|     5V |------|HV                |                |     |
+|        |      |                  |                |     |
+|        |      |LV             3V3|----------------|VCC  |
++--------+      +------------------+                +-----+
+                     |                  |
+                     |                  |
+                 +---+---+          +---+---+
+                 |  GND  |          | GND  |
+                 +-------+          +-----+
+                Fonte HW-131        Protoboard (GND Comum)
+
+*/
+
+Preciso adaptar este projeto para se comunicar com wifi.
+
+Quero fazer um webservidor no esp01.
+
+a comunicação entre esp01 e arduino será via serial.
+
+Funcionalidades no webservidor
+* - configurar os nives de lago e bomba, para oos sensores de ultrasom.
+Niveis minimos e maximos
+
+* - saber o nivel do lago e do filtro
+
+* - Saber o status de cada bomba
+
+* - ligar e desligar as bombas
