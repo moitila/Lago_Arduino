@@ -81,30 +81,41 @@ private:
 
 class WaterPump {
 public:
-    WaterPump(int pumpPin) : pumpPin(pumpPin) {
+    WaterPump(int pumpPin, unsigned long delayTime) : pumpPin(pumpPin), delayTime(delayTime) {
         pinMode(pumpPin, OUTPUT);
         stop();
     }
 
     void start() {
-        digitalWrite(pumpPin, HIGH);
+        unsigned long currentTime = millis();
+        if ((currentTime - lastChangeTime >= delayTime) && !isRunning) {
+            digitalWrite(pumpPin, HIGH);
+            isRunning = true;
+            lastChangeTime = currentTime;
+        }
     }
 
     void stop() {
-        digitalWrite(pumpPin, LOW);
+        unsigned long currentTime = millis();
+        if ((currentTime - lastChangeTime >= delayTime) && isRunning) {
+            digitalWrite(pumpPin, LOW);
+            isRunning = false;
+            lastChangeTime = currentTime;
+        }
     }
-
 private:
     int pumpPin;
+    bool isRunning = false; // Mantém o estado atual da bomba
+    unsigned long lastChangeTime = 0; // Armazena a última vez que o estado foi alterado
+    unsigned long delayTime; // Tempo de atraso mínimo para mudanças de estado
 };
-
 
 
 
 class WaterControlSystem {
 public:
     bool debug = true;
-    WaterControlSystem() : sensorLago(6, 5), sensorFiltro(3, 4), bombaLago(9), bombaFiltro(8) {}
+    WaterControlSystem() : sensorLago(6, 5), sensorFiltro(3, 4), bombaLago(9,5000), bombaFiltro(8,5000) {}
 
     void run() {
        
