@@ -9,9 +9,16 @@
 #define pinBombaLago 9
 #define pinBombaFiltro 8
 
+enum WaterLevelStatus {
+  EMPTY = 0, // VAZIO
+  OK = 1,    // NÍVEL OK
+  FULL = 2   // CHEIO
+};
+
 class WaterLevelSensor {
 
 private:
+    WaterLevelStatus status = EMPTY;
     unsigned long min = 4;
     unsigned long max = 20;
     float media = 0;
@@ -20,6 +27,7 @@ private:
     const unsigned int limitfailures = 10; // Limite de falhas antes do alerta
     NewPing sonar;
     long leituras[3] = {0,0,0};
+    
 
     void updateReadings(long novaLeitura) {
         leituras[0] = leituras[1];
@@ -54,11 +62,11 @@ private:
      // Atualiza o status baseado na média das leituras
     void updateStatus(){
       if (media > max){
-        status = 0; //VAZIO
+        status = EMPTY; //VAZIO
       } else if (media < min) {
-        status = 2;//CHEIO
+        status = FULL;//CHEIO
       } else {
-        status = 1;//OK
+        status = OK;//OK
       }
     };
   public:
