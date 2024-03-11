@@ -1,13 +1,13 @@
 #include <Arduino.h>
 #include <NewPing.h>
 
-#define PIN_TRIG_LAGO 6
+#define pinTrigLago 6
 #define pinEchoLago 5
 #define pinTrigFiltro 4
 #define pinEchoFiltro 3
 
 #define pinBombaLago 9
-#define pinBombaFilro 8
+#define pinBombaFiltro 8
 
 class WaterLevelSensor {
 
@@ -115,7 +115,7 @@ private:
 class WaterControlSystem {
 public:
     bool debug = true;
-    WaterControlSystem() : sensorLago(6, 5), sensorFiltro(3, 4), bombaLago(9,5000), bombaFiltro(8,5000) {}
+    WaterControlSystem() : sensorLago(pinTrigLago, pinEchoLago), sensorFiltro(pinEchoFiltro, pinTrigFiltro), bombaLago(pinBombaLago,5000), bombaFiltro(pinBombaFiltro,5000) {}
 
     void run() {
        
