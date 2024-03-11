@@ -10,53 +10,48 @@
 #define pinBombaFilro 8
 
 class WaterLevelSensor {
-public:
-    WaterLevelSensor(int triggerPin, int echoPin) : sonar(triggerPin, echoPin,150) {}
-
-    float getWaterLevel() {
-        unsigned long leituraCerta = sonar.ping_cm();
-        Serial.print("Sensor "); Serial.println(leituraCerta);
-        if (leituraCerta > 0){
-          updateReadings(leituraCerta);
-        } else {
-          leituraCerta = -1;
-        }
-        return getMediaLeitura();
-    }
-    void setMin(long min){
-      this->min = min;
-    }
-
-    void setMax(long max){
-      this->max = max;
-    }
-
-    int getStatus(){
-      return status;
-    }
 
 private:
     unsigned long min = 4;
     unsigned long max = 20;
     float media = 0;
-    unsigned int status = -1;
-
+    int status = -1;
+    unsigned int consecutivefailures = 0; // Contador de falhas consecutivas
+    const unsigned int limitfailures = 10; // Limite de falhas antes do alerta
     NewPing sonar;
     long leituras[3] = {0,0,0};
+
     void updateReadings(long novaLeitura) {
-        // Desloca as leituras antigas e adiciona a nova leitura ao final
         leituras[0] = leituras[1];
         leituras[1] = leituras[2];
         leituras[2] = novaLeitura;
         updateMedia();
         updateStatus();
     }  
+
     void updateMedia(){
       media = (leituras[0] + leituras[1] + leituras[2]) / 3.0f;
     }
-    float getMediaLeitura(){
-      return media;
+
+    bool verifyReading(unsigned long value){
+      if (value > 0){
+          consecutivefailures = 0;
+          updateReadings(value);
+          return true;
+        } else {
+          consecutivefailures++;
+          if (consecutivefailures >= limitfailures) {
+              handleAlert();
+          }
+          return false;
+        }
     }
+    void handleAlert() {
+        Serial.println("ALERTA: Leituras inválidas consecutivas excederam o limite.");
+        // Adicionar mais lógicas de alerta conforme necessário
+    }
+
+     // Atualiza o status baseado na média das leituras
     void updateStatus(){
       if (media > max){
         status = 0; //VAZIO
@@ -66,6 +61,22 @@ private:
         status = 1;//OK
       }
     };
+  public:
+    WaterLevelSensor(int triggerPin, int echoPin) : sonar(triggerPin, echoPin,150) {}
+
+    float getWaterLevel() {
+        unsigned long reading = sonar.ping_cm();
+        if (verifyReading(reading)){
+          Serial.print("Leitura válida: "); Serial.println(reading);
+        }
+        return getMediaLeitura();
+    }
+
+    float getMediaLeitura() { return media; }
+    void setMin(long min) { this->min = min; }
+    void setMax(long max) { this->max = max; }
+    int getStatus() { return status; }
+  
 };
 
 class WaterPump {
@@ -100,15 +111,8 @@ public:
         float lagoonLevel = sensorLago.getWaterLevel();
         float filterLevel = sensorFiltro.getWaterLevel();
         
-        if (debug){
-          Serial.print("Nivel médio Lago ");
-          Serial.print(lagoonLevel);
-          Serial.println(" cm");
+        if (debug) sendInfoSerialDebug(lagoonLevel, filterLevel);
 
-          Serial.print("Nivel medio Filtro ");
-          Serial.print(filterLevel);
-          Serial.println(" cm");
-        }
         updateStatusBombas(getStatusSistema(sensorLago.getStatus(),sensorFiltro.getStatus()));
     }
 
@@ -119,8 +123,9 @@ private:
     WaterPump bombaLago;
     WaterPump bombaFiltro;
     void updateStatusBombas(int statusSistema){
-      Serial.print("Status ");
-      Serial.println(statusSistema);
+
+      if (debug){ Serial.print("Status ");  Serial.println(statusSistema); }
+      
       switch (statusSistema)
       {
       case 1 :
@@ -163,6 +168,17 @@ private:
         statusSistema = 4;
 
       return statusSistema;  
+    }
+    void sendInfoSerialDebug(float lagoonLevel, float filterLevel){
+      {
+          Serial.print("Nivel médio Lago ");
+          Serial.print(lagoonLevel);
+          Serial.println(" cm");
+
+          Serial.print("Nivel medio Filtro ");
+          Serial.print(filterLevel);
+          Serial.println(" cm");
+      }
     }
 };
 
