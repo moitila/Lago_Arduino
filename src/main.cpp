@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include <NewPing.h>
+#include <SoftwareSerial.h>
 #include "WaterControlSystem.h"
+#include "ExternalCom.h"
+#include "LogManager.h"
 
 #define pinTrigLago 6
 #define pinEchoLago 5
@@ -10,18 +13,29 @@
 #define pinBombaLago 9
 #define pinBombaFiltro 8
 
+unsigned long lastSensorReadTime = 0;
 
+SoftwareSerial ecSerial(10,11);
 WaterControlSystem waterSystem(pinTrigLago, pinEchoLago, pinTrigFiltro, pinEchoFiltro, pinBombaLago, pinBombaFiltro);
+LogManager logger;
+ExternalCom externalCom(ecSerial, waterSystem, logger);
 
 void setup()
 {
   Serial.begin(115200);
+  ecSerial.begin(115200);
+  waterSystem.setSensorReadInterval(60000);
 }
 
 void loop()
 {
-  waterSystem.run();
-  delay(1000); // Ajuste conforme necessário
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastSensorReadTime >= waterSystem.getSensorReadInterval()) {
+    lastSensorReadTime = currentMillis;
+    waterSystem.run();
+  } 
+  
+  externalCom.run();
 }
 
 /*

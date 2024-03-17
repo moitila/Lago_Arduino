@@ -23,3 +23,11 @@ void WaterPump::stop() {
         lastChangeTime = currentTime;
     }
 }
+
+bool WaterPump::getStatus(){
+    return this->getStatus();
+}
+
+void WaterPump::setDelayTime(unsigned long delay){
+    this->delayTime = delay;
+}

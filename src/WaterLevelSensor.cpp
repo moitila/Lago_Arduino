@@ -87,3 +87,7 @@ void WaterLevelSensor::updateReadings(long novaLeitura)
         return distanciaMaximaParaAgua;
   }
   int WaterLevelSensor::getStatus() { return status; }
+  
+  void WaterLevelSensor::setLimitFailures(unsigned int limit){
+    this->consecutivefailures = limit;
+  }

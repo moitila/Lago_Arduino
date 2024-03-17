@@ -8,6 +8,8 @@ public:
     WaterPump(int pumpPin, unsigned long delayTime);
     void start();
     void stop();
+    bool getStatus();
+    void setDelayTime(unsigned long delay);
 
 private:
     int pumpPin;

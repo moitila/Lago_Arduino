@@ -19,6 +19,7 @@ public:
     unsigned long getDistanciaMinimaParaAgua() const;
     void setDistanciaMaximaParaAgua(unsigned long distancia);
     unsigned long getDistanciaMaximaParaAgua() const;
+    void setLimitFailures(unsigned int limit);
     int getStatus();
 
 private:
