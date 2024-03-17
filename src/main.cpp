@@ -21,8 +21,8 @@ class WaterLevelSensor
 
 private:
   WaterLevelStatus status = EMPTY;
-  unsigned long min = 4;
-  unsigned long max = 20;
+  unsigned long distanciaMaximaParaAgua = 20; // Distância máxima esperada até a água (reservatório vazio)
+  unsigned long distanciaMinimaParaAgua = 4;  // Distância mínima esperada até a água (reservatório cheio)
   float media = 0;
   unsigned int consecutivefailures = 0;  // Contador de falhas consecutivas
   const unsigned int limitfailures = 10; // Limite de falhas antes do alerta
@@ -68,22 +68,10 @@ private:
   }
 
   // Atualiza o status baseado na média das leituras
-  void updateStatus()
-  {
-    // Inverte a lógica: um valor MENOR de leitura (distância) indica CHEIO,
-    // e um valor MAIOR de leitura indica VAZIO.
-    if (media < min)
-    {
-      status = FULL; // CHEIO: Menor distância até a superfície da água
-    }
-    else if (media > max)
-    {
-      status = EMPTY; // VAZIO: Maior distância até a superfície da água
-    }
-    else
-    {
-      status = OK; // OK: O nível de água está dentro do intervalo esperado
-    }
+  void updateStatus()  {
+    if (media > distanciaMaximaParaAgua) { status = EMPTY; }
+    else if (media < distanciaMinimaParaAgua)  { status = FULL; }
+    else {status = OK; }
   };
 
 public:
@@ -101,8 +89,21 @@ public:
   }
 
   float getMediaLeitura() { return media; }
-  void setMin(long min) { this->min = min; }
-  void setMax(long max) { this->max = max; }
+  void setDistanciaMinimaParaAgua(unsigned long distancia) {
+        distanciaMinimaParaAgua = distancia;
+  }
+
+  unsigned long getDistanciaMinimaParaAgua() const {
+        return distanciaMinimaParaAgua;
+  }
+
+  void setDistanciaMaximaParaAgua(unsigned long distancia) {
+        distanciaMaximaParaAgua = distancia;
+  }
+
+  unsigned long getDistanciaMaximaParaAgua() const {
+        return distanciaMaximaParaAgua;
+  }
   int getStatus() { return status; }
 };
 
