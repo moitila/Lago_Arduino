@@ -116,7 +116,7 @@ DeserializationError WaterControlSystem::setSystemConfig(const String &jsonConfi
   if (doc.containsKey("distMaximaAguaFiltro")) { distMaximaAguaFiltro = doc["distMaximaAguaFiltro"];  }
   if (doc.containsKey("ultrasonicFailLimit"))  { ultrasonicFailLimit = doc["ultrasonicFailLimit"];  }
   if (doc.containsKey("pumpDelay"))  { pumpDelay = doc["pumpDelay"]; }
-  if (doc.containsKey("ultrasonicReadInterval"))  { unsigned long ultrasonicReadInterval = doc["ultrasonicReadInterval"]; }
+  if (doc.containsKey("ultrasonicReadInterval"))  { ultrasonicReadInterval = doc["ultrasonicReadInterval"]; }
 
   sensorLago.setDistanciaMaximaParaAgua(distMaximaAguaLago);
   sensorLago.setDistanciaMinimaParaAgua(distMinimaAguaLago);
