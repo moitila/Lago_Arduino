@@ -233,6 +233,26 @@ private:
       Serial.println(" cm");
     }
   }
+  void setMinLakeLevel(unsigned long minLevel)
+  {
+    sensorLago.setDistanciaMinimaParaAgua(minLevel);
+  }
+
+  void setMaxLakeLevel(unsigned long maxLevel)
+  {
+    sensorLago.setDistanciaMaximaParaAgua(maxLevel);
+  }
+
+  // Métodos para atualizar configurações do sensor do filtro
+  void setMinFilterLevel(unsigned long minLevel)
+  {
+    sensorFiltro.setDistanciaMinimaParaAgua(minLevel);
+  }
+
+  void setMaxFilterLevel(unsigned long maxLevel)
+  {
+    sensorFiltro.setDistanciaMaximaParaAgua(maxLevel);
+  }
 };
 
 WaterControlSystem waterSystem;
