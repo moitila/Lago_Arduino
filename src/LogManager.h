@@ -16,6 +16,9 @@ class LogManager {
         Serial.println("Arduino message :" + message);
       }
     }
+    void warning(const String &message){
+      Serial.println("WARNING Arduino message :" + message);
+    }
 
   private:
     bool loggingEnabled;

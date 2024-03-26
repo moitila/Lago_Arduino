@@ -16,8 +16,8 @@
 unsigned long lastSensorReadTime = 0;
 
 SoftwareSerial ecSerial(10,11);
-WaterControlSystem waterSystem(pinTrigLago, pinEchoLago, pinTrigFiltro, pinEchoFiltro, pinBombaLago, pinBombaFiltro);
 LogManager logger;
+WaterControlSystem waterSystem(pinTrigLago, pinEchoLago, pinTrigFiltro, pinEchoFiltro, pinBombaLago, pinBombaFiltro, logger);
 ExternalCom externalCom(ecSerial, waterSystem, logger);
 
 void setup()

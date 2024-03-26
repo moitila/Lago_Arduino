@@ -5,14 +5,23 @@
 #include "WaterLevelSensor.h"
 #include "WaterPump.h"
 
+enum StatusSistema {
+    BOMBAS_DESLIGADAS = 0,
+    APENAS_FILTRO = 1,
+    APENAS_LAGO = 2,
+    AMBAS_LIGADAS = 3,
+    ERRO = 4
+};
+
 class WaterControlSystem {
 public:
-    WaterControlSystem(int pinTrigLago, int pinEchoLago, int pinTrigFiltro, int pinEchoFiltro, int pinBombaLago, int pinBombaFiltro);
+    WaterControlSystem(int pinTrigLago, int pinEchoLago, int pinTrigFiltro, int pinEchoFiltro, int pinBombaLago, 
+        int pinBombaFiltro, LogManager &logger);
     void run();
-    void setMinLakeLevel(unsigned long minLevel);
-    void setMaxLakeLevel(unsigned long maxLevel);
-    void setMinFilterLevel(unsigned long minLevel);
-    void setMaxFilterLevel(unsigned long maxLevel);
+    void setDistanciaMaximaParaAguaLago(unsigned long distancia);
+    void setDistanciaMinimaParaAguaLago(unsigned long distancia);
+    void setDistanciaMaximaParaAguaFiltro(unsigned long distancia);
+    void setDistanciaMinimaParaAguaFiltro(unsigned long distancia);
     unsigned long getSensorReadInterval();
     void setSensorReadInterval(unsigned long interval);
     String getJsonStatus();
@@ -25,9 +34,9 @@ private:
     WaterPump bombaFiltro;
     bool debug;
     void updateStatusBombas(int statusSistema);
-    int getStatusSistema(int statusLago, int statusFiltro);
-    void sendInfoSerialDebug(float lagoonLevel, float filterLevel);
+    StatusSistema getStatusSistema(WaterLevelStatus statusLago, WaterLevelStatus statusFiltro);
     unsigned long sensorReadInterval;
+    LogManager &logger;
 };
 
 #endif // WATERCONTROLSYSTEM_H

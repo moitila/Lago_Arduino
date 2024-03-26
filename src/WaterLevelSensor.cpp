@@ -2,12 +2,13 @@
 #include "WaterLevelSensor.h";
 
 
-WaterLevelSensor::WaterLevelSensor(int triggerPin, int echoPin) : sonar(triggerPin, echoPin, 150),
+WaterLevelSensor::WaterLevelSensor(int triggerPin, int echoPin,String nome,  LogManager &logger) : sonar(triggerPin, echoPin, 150),
     distanciaMaximaParaAgua(20), 
     distanciaMinimaParaAgua(4),  
     media(0),                    
     consecutivefailures(0),      
-    limitfailures(10)     
+    limitfailures(10),
+    logger(logger)     
 {
 
 }
@@ -25,7 +26,7 @@ void WaterLevelSensor::updateReadings(long novaLeitura)
   {
     media = (leituras[0] + leituras[1] + leituras[2]) / 3.0f;
   }
-
+  
   bool WaterLevelSensor::verifyReading(unsigned long value)
   {
     if (value > 0)
@@ -47,7 +48,7 @@ void WaterLevelSensor::updateReadings(long novaLeitura)
 
   void WaterLevelSensor::handleAlert()
   {
-    Serial.println("ALERTA: Leituras inválidas consecutivas excederam o limite.");
+    logger.warning("ALERTA: Leituras inválidas consecutivas excederam o limite. Sensor: " + getNome());
     // Adicionar mais lógicas de alerta conforme necessário
   }
 
@@ -58,13 +59,16 @@ void WaterLevelSensor::updateReadings(long novaLeitura)
     else {status = OK; }
   }
 
+  WaterLevelStatus WaterLevelSensor::getWaterLevelStatus(){
+    return status;
+  }
+
   float WaterLevelSensor::getWaterLevel()
   {
     unsigned long reading = sonar.ping_cm();
     if (verifyReading(reading))
     {
-      Serial.print("Leitura válida: ");
-      Serial.println(reading);
+      logger.log("Leitura válida: " + String(reading,2));
     }
     return getMediaLeitura();
   }
@@ -90,4 +94,10 @@ void WaterLevelSensor::updateReadings(long novaLeitura)
   
   void WaterLevelSensor::setLimitFailures(unsigned int limit){
     this->consecutivefailures = limit;
+  }
+  void WaterLevelSensor::setNome(String nome_){
+    this->nome = nome_;
+  }
+  String WaterLevelSensor::getNome(){
+    return nome;
   }

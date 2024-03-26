@@ -1,7 +1,7 @@
 // WaterLevelSensor.h
 #ifndef WATERLEVELSENSOR_H
 #define WATERLEVELSENSOR_H
-
+#include "LogManager.h"
 #include <NewPing.h>
 
 enum WaterLevelStatus {
@@ -12,7 +12,7 @@ enum WaterLevelStatus {
 
 class WaterLevelSensor {
 public:
-    WaterLevelSensor(int triggerPin, int echoPin);
+    WaterLevelSensor(int triggerPin, int echoPin, String nome, LogManager &logger);
     float getWaterLevel();
     float getMediaLeitura();
     void setDistanciaMinimaParaAgua(unsigned long distancia);
@@ -21,6 +21,9 @@ public:
     unsigned long getDistanciaMaximaParaAgua() const;
     void setLimitFailures(unsigned int limit);
     int getStatus();
+    WaterLevelStatus getWaterLevelStatus();
+    void setNome(String nome_);
+    String getNome();
 
 private:
     WaterLevelStatus status;
@@ -31,6 +34,8 @@ private:
     const unsigned int limitfailures;
     NewPing sonar;
     long leituras[3];
+    LogManager &logger;
+    String nome;
 
     void updateReadings(long novaLeitura);
     void updateMedia();

@@ -1,17 +1,21 @@
 
 #include "WaterControlSystem.h"
 #include <ArduinoJson.h>
+#include "LogManager.h"
 
 
 WaterControlSystem::WaterControlSystem(int pinTrigLago, int pinEchoLago, int pinTrigFiltro, int pinEchoFiltro, 
-                                        int pinBombaLago, int pinBombaFiltro) : sensorLago(pinTrigLago, pinEchoLago), 
-                                        sensorFiltro(pinTrigFiltro, pinEchoFiltro), bombaLago(pinBombaLago,5000), 
-                                        bombaFiltro(pinBombaFiltro,5000) {
+                                        int pinBombaLago, int pinBombaFiltro, LogManager &logger) : 
+                                        sensorLago(pinTrigLago, pinEchoLago,"Lago ", logger), 
+                                        sensorFiltro(pinTrigFiltro, pinEchoFiltro,"Filtro ", logger), 
+                                        bombaLago(pinBombaLago,5000), 
+                                        bombaFiltro(pinBombaFiltro,5000), logger(logger) {
 }
-void WaterControlSystem::setMinLakeLevel(unsigned long minLevel) {    sensorLago.setDistanciaMinimaParaAgua(minLevel);}
-void WaterControlSystem::setMaxLakeLevel(unsigned long maxLevel) {    sensorLago.setDistanciaMaximaParaAgua(maxLevel);}
-void WaterControlSystem::setMinFilterLevel(unsigned long minLevel) {    sensorFiltro.setDistanciaMinimaParaAgua(minLevel);}
-void WaterControlSystem::setMaxFilterLevel(unsigned long maxLevel) {    sensorFiltro.setDistanciaMaximaParaAgua(maxLevel);}
+void WaterControlSystem::setDistanciaMaximaParaAguaLago(unsigned long distancia) { sensorLago.setDistanciaMaximaParaAgua(distancia);}
+void WaterControlSystem::setDistanciaMinimaParaAguaLago(unsigned long distancia) { sensorLago.setDistanciaMinimaParaAgua(distancia);}
+void WaterControlSystem::setDistanciaMaximaParaAguaFiltro(unsigned long distancia) { sensorFiltro.setDistanciaMaximaParaAgua(distancia);}
+void WaterControlSystem::setDistanciaMinimaParaAguaFiltro(unsigned long distancia) { sensorFiltro.setDistanciaMinimaParaAgua(distancia);}
+
 void WaterControlSystem::updateStatusBombas(int statusSistema)
   {
     switch (statusSistema)
@@ -44,42 +48,24 @@ void WaterControlSystem::run() {
     float lagoonLevel = sensorLago.getWaterLevel();
     float filterLevel = sensorFiltro.getWaterLevel();
 
-    if (debug)
-      sendInfoSerialDebug(lagoonLevel, filterLevel);
+    logger.log("Nivel Lago: " + String(lagoonLevel, 2)); 
+    logger.log("Nivel Filtro: " + String(filterLevel, 2));
 
-    updateStatusBombas(getStatusSistema(sensorLago.getStatus(), sensorFiltro.getStatus()));
+    updateStatusBombas(getStatusSistema(sensorLago.getWaterLevelStatus(), sensorFiltro.getWaterLevelStatus()));
 }
-int WaterControlSystem::getStatusSistema(int statusLago, int statusFiltro)
-{
-    int statusSistema = 0;
-    if ((statusLago == 0 && statusFiltro == 0) ||
-        (statusLago == 2 && statusFiltro == 2))
-        statusSistema = 1;
-    else if ((statusLago == 0 && statusFiltro == 1) ||
-             (statusLago == 0 && statusFiltro == 2) ||
-             (statusLago == 1 && statusFiltro == 2))
-        statusSistema = 2;
-    else if ((statusLago == 1 && statusFiltro == 0) ||
-             (statusLago == 2 && statusFiltro == 0) ||
-             (statusLago == 2 && statusFiltro == 1))
-        statusSistema = 3;
-    else if (statusLago == 1 && statusFiltro == 1)
-        statusSistema = 4;
-
-    return statusSistema;
-}
-void WaterControlSystem::sendInfoSerialDebug(float lagoonLevel, float filterLevel)
-  {
-    {
-      Serial.print("Nivel médio Lago ");
-      Serial.print(lagoonLevel);
-      Serial.println(" cm");
-
-      Serial.print("Nivel medio Filtro ");
-      Serial.print(filterLevel);
-      Serial.println(" cm");
+StatusSistema WaterControlSystem::getStatusSistema(WaterLevelStatus statusLago, WaterLevelStatus statusFiltro) {
+    if (statusLago == OK && statusFiltro == OK) {
+        return BOMBAS_DESLIGADAS; // Níveis de água estão em condições ideais
+    } else if (statusLago == EMPTY && statusFiltro == FULL) {
+        return APENAS_FILTRO; // Necessidade de transferir água do filtro para o lago
+    } else if (statusLago == FULL && statusFiltro == EMPTY) {
+        return APENAS_LAGO; // Necessidade de transferir água do lago para o filtro
+    } else if (statusLago == EMPTY || statusFiltro == EMPTY) {
+        return AMBAS_LIGADAS; // Necessidade de ativação de ambas as bombas para correção de nível
+    } else {
+        return ERRO; // Alguma condição não atendida ou erro de leitura
     }
-  }
+}
 
 String WaterControlSystem::getJsonStatus(){
     JsonDocument doc; //usar o Assistant do ArduinoJson para estimar o tamanho necessário.
