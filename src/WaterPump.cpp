@@ -25,7 +25,7 @@ void WaterPump::stop() {
 }
 
 bool WaterPump::getStatus(){
-    return this->getStatus();
+    return this->isRunning;
 }
 
 void WaterPump::setDelayTime(unsigned long delay){

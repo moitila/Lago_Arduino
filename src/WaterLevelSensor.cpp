@@ -68,7 +68,9 @@ void WaterLevelSensor::updateReadings(long novaLeitura)
     unsigned long reading = sonar.ping_cm();
     if (verifyReading(reading))
     {
-      logger.log("Leitura válida: " + String(reading,2));
+      logger.log("Leitura válida sensor " + getNome() + ": " + String(reading,2));
+    } else {
+      logger.warning("Leitura descartada sensor " + getNome());
     }
     return getMediaLeitura();
   }
