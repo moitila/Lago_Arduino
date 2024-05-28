@@ -4,24 +4,15 @@
 #include <Arduino.h>
 
 class LogManager {
-  public:
-    LogManager() : loggingEnabled(true) {} 
+public:
+    LogManager();
+    void log(String message);
+    void warning(String message);
+    void setLogStatus(bool status);
+    bool getLogStatus();
 
-    void enableLogging(bool enable) {
-      loggingEnabled = enable;
-    }
-
-    void log(const String &message) {
-      if (loggingEnabled) {
-        Serial.println("Arduino message :" + message);
-      }
-    }
-    void warning(const String &message){
-      Serial.println("WARNING Arduino message :" + message);
-    }
-
-  private:
-    bool loggingEnabled;
+private:
+    bool logEnabled;
 };
 
 #endif

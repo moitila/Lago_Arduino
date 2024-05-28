@@ -4,13 +4,42 @@
 #include "LogManager.h"
 
 
-WaterControlSystem::WaterControlSystem(int pinTrigLago, int pinEchoLago, int pinTrigFiltro, int pinEchoFiltro, 
-                                        int pinBombaLago, int pinBombaFiltro, LogManager &logger) : 
-                                        sensorLago(pinTrigLago, pinEchoLago,"Lago ", logger), 
-                                        sensorFiltro(pinTrigFiltro, pinEchoFiltro,"Filtro ", logger), 
-                                        bombaLago(pinBombaLago,5000), 
-                                        bombaFiltro(pinBombaFiltro,5000), logger(logger) {
+WaterControlSystem::WaterControlSystem(int pinTrigLago, int pinEchoLago, int pinTrigFiltro, int pinEchoFiltro, int pinBombaLago, int pinBombaFiltro, LogManager &logger, const ConfigData &config)
+: sensorLago(pinTrigLago, pinEchoLago, "Sensor Lago", config.distMaximaAguaLago, config.distMinimaAguaLago, config.ultrasonicFailLimit, logger), 
+  sensorFiltro(pinTrigFiltro, pinEchoFiltro, "Sensor Filtro", config.distMaximaAguaFiltro, config.distMinimaAguaFiltro, config.ultrasonicFailLimit, logger), 
+  bombaLago("Bomba Lago", pinBombaLago, config.pumpDelay, logger), 
+  bombaFiltro("Bomba Filtro", pinBombaFiltro, config.pumpDelay, logger), 
+  logger(logger), sensorReadInterval(config.ultrasonicReadInterval) {
 }
+
+void WaterControlSystem::run() {
+
+    float lagoonLevel = sensorLago.getWaterLevel();
+    float filterLevel = sensorFiltro.getWaterLevel();
+
+    logger.log("Nivel Lago: " + String(lagoonLevel, 2)); 
+    logger.log("Nivel Filtro: " + String(filterLevel, 2));
+
+    updateStatusBombas(getStatusSistema(sensorLago.getWaterLevelStatus(), sensorFiltro.getWaterLevelStatus()));
+}
+
+String WaterControlSystem::getJsonStatus(){
+    JsonDocument doc; //usar o Assistant do ArduinoJson para estimar o tamanho necessário.
+
+    doc["lakeLevel"] = sensorLago.getWaterLevel();
+    doc["distMinimaAguaLago"] = sensorLago.getDistanciaMinimaParaAgua();
+    doc["distMaximaAguaLago"] = sensorLago.getDistanciaMaximaParaAgua();
+    doc["filterLevel"] = sensorFiltro.getWaterLevel();
+    doc["distMinimaAguaFiltro"] = sensorFiltro.getDistanciaMinimaParaAgua();
+    doc["distMaximaAguaFiltro"] = sensorFiltro.getDistanciaMaximaParaAgua();
+    doc["pumpLakeStatus"] = bombaLago.getStatus();
+    doc["pumpFilterStatus"] = bombaFiltro.getStatus();
+    String output;
+    doc.shrinkToFit();
+    serializeJson(doc, output);
+    return output;
+}
+
 void WaterControlSystem::setDistanciaMaximaParaAguaLago(unsigned long distancia) { sensorLago.setDistanciaMaximaParaAgua(distancia);}
 void WaterControlSystem::setDistanciaMinimaParaAguaLago(unsigned long distancia) { sensorLago.setDistanciaMinimaParaAgua(distancia);}
 void WaterControlSystem::setDistanciaMaximaParaAguaFiltro(unsigned long distancia) { sensorFiltro.setDistanciaMaximaParaAgua(distancia);}
@@ -43,16 +72,7 @@ void WaterControlSystem::updateStatusBombas(int statusSistema)
       break;
     }
   }
-void WaterControlSystem::run() {
 
-    float lagoonLevel = sensorLago.getWaterLevel();
-    float filterLevel = sensorFiltro.getWaterLevel();
-
-    logger.log("Nivel Lago: " + String(lagoonLevel, 2)); 
-    logger.log("Nivel Filtro: " + String(filterLevel, 2));
-
-    updateStatusBombas(getStatusSistema(sensorLago.getWaterLevelStatus(), sensorFiltro.getWaterLevelStatus()));
-}
 StatusSistema WaterControlSystem::getStatusSistema(WaterLevelStatus statusLago, WaterLevelStatus statusFiltro) {
     if (statusLago == OK && statusFiltro == OK) {
         return BOMBAS_DESLIGADAS; // Níveis de água estão em condições ideais
@@ -67,58 +87,43 @@ StatusSistema WaterControlSystem::getStatusSistema(WaterLevelStatus statusLago, 
     }
 }
 
-String WaterControlSystem::getJsonStatus(){
-    JsonDocument doc; //usar o Assistant do ArduinoJson para estimar o tamanho necessário.
 
-    doc["lakeLevel"] = sensorLago.getWaterLevel();
-    doc["distMinimaAguaLago"] = sensorLago.getDistanciaMinimaParaAgua();
-    doc["distMaximaAguaLago"] = sensorLago.getDistanciaMaximaParaAgua();
-    doc["filterLevel"] = sensorFiltro.getWaterLevel();
-    doc["distMinimaAguaFiltro"] = sensorFiltro.getDistanciaMinimaParaAgua();
-    doc["distMaximaAguaFiltro"] = sensorFiltro.getDistanciaMaximaParaAgua();
-    doc["pumpLakeStatus"] = bombaLago.getStatus();
-    doc["pumpFilterStatus"] = bombaFiltro.getStatus();
-    String output;
-    doc.shrinkToFit();
-    serializeJson(doc, output);
-    return output;
-}
 DeserializationError WaterControlSystem::setSystemConfig(const String &jsonConfig)
 {
   JsonDocument doc; // Ajustar o tamanho
   DeserializationError error = deserializeJson(doc, jsonConfig);
   if (error)  { return error;  }
-  unsigned long distMinimaAguaLago;
-  unsigned long distMaximaAguaLago;
-  unsigned long distMinimaAguaFiltro;
-  unsigned long distMaximaAguaFiltro;
-  unsigned long ultrasonicFailLimit;
-  unsigned long pumpDelay;
-  unsigned long ultrasonicReadInterval;
 
-  if (doc.containsKey("distMinimaAguaLago")) { distMinimaAguaLago = doc["distMinimaAguaLago"];  }
-  if (doc.containsKey("distMaximaAguaLago")) { distMaximaAguaLago = doc["distMaximaAguaLago"];  }
-  if (doc.containsKey("distMinimaAguaFiltro")) { distMinimaAguaFiltro = doc["distMinimaAguaFiltro"];  }
-  if (doc.containsKey("distMaximaAguaFiltro")) { distMaximaAguaFiltro = doc["distMaximaAguaFiltro"];  }
-  if (doc.containsKey("ultrasonicFailLimit"))  { ultrasonicFailLimit = doc["ultrasonicFailLimit"];  }
-  if (doc.containsKey("pumpDelay"))  { pumpDelay = doc["pumpDelay"]; }
-  if (doc.containsKey("ultrasonicReadInterval"))  { ultrasonicReadInterval = doc["ultrasonicReadInterval"]; }
-
-  sensorLago.setDistanciaMaximaParaAgua(distMaximaAguaLago);
-  sensorLago.setDistanciaMinimaParaAgua(distMinimaAguaLago);
-  sensorFiltro.setDistanciaMaximaParaAgua(distMaximaAguaFiltro);
-  sensorFiltro.setDistanciaMinimaParaAgua(distMinimaAguaFiltro);
-  sensorLago.setLimitFailures(ultrasonicFailLimit);
-  sensorFiltro.setLimitFailures(ultrasonicFailLimit);
-  bombaFiltro.setDelayTime(pumpDelay);
-  bombaLago.setDelayTime(pumpDelay);
-  this->setSensorReadInterval(ultrasonicReadInterval);
+  setConfig(doc["distMaximaAguaLago"], 
+            doc["distMinimaAguaLago"], 
+            doc["distMaximaAguaFiltro"], 
+            doc["distMinimaAguaFiltro"], 
+            doc["ultrasonicFailLimit"], 
+            doc["ultrasonicReadInterval"], 
+            doc["pumpDelay"], 
+            doc["logLigado"]);
 
   return DeserializationError::Ok;
 }
+
+void WaterControlSystem::setSensorReadInterval(unsigned long interval){
+  this->sensorReadInterval = interval;
+}
+
 unsigned long WaterControlSystem::getSensorReadInterval(){
   return this->sensorReadInterval;
 }
-void WaterControlSystem::setSensorReadInterval(unsigned long interval){
-  this->sensorReadInterval = interval;
+
+void WaterControlSystem::setConfig(int distMaximaAguaLago, int distMinimaAguaLago, int distMaximaAguaFiltro, int distMinimaAguaFiltro, int ultrasonicFailLimit, unsigned long ultrasonicReadInterval, unsigned long pumpDelay, bool logLigado) {
+    // Aqui configuramos os parâmetros do sistema
+    this->sensorLago.setDistanciaMaximaParaAgua(distMaximaAguaLago);
+    this->sensorLago.setDistanciaMinimaParaAgua(distMinimaAguaLago);
+    this->sensorFiltro.setDistanciaMaximaParaAgua(distMaximaAguaFiltro);
+    this->sensorFiltro.setDistanciaMinimaParaAgua(distMinimaAguaFiltro);
+    this->sensorLago.setLimitFailures(ultrasonicFailLimit);
+    this->sensorFiltro.setLimitFailures(ultrasonicFailLimit);
+    this->sensorReadInterval = ultrasonicReadInterval;
+    this->bombaLago.setDelayTime(pumpDelay);
+    this->bombaFiltro.setDelayTime(pumpDelay);
+    logger.setLogStatus(logLigado);
 }

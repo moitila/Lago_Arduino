@@ -1,16 +1,10 @@
-#include <NewPing.h>
-#include "WaterLevelSensor.h";
+#include "WaterLevelSensor.h"
 
 
-WaterLevelSensor::WaterLevelSensor(int triggerPin, int echoPin,String nome,  LogManager &logger) : sonar(triggerPin, echoPin, 150),
-    distanciaMaximaParaAgua(20), 
-    distanciaMinimaParaAgua(4),  
-    media(0),                    
-    consecutivefailures(0),      
-    limitfailures(10),
-    logger(logger)     
-{
-
+WaterLevelSensor::WaterLevelSensor(int triggerPin, int echoPin, const String nome, unsigned long distMaximaParaAgua, unsigned long distMinimaParaAgua, unsigned int limitfailures, LogManager &logger)
+    : sonar(triggerPin, echoPin, 150), triggerPin(triggerPin), echoPin(echoPin), nome(nome),
+      distanciaMaximaParaAgua(distMaximaParaAgua), distanciaMinimaParaAgua(distMinimaParaAgua), media(0),
+      consecutivefailures(0), limitfailures(limitfailures), logger(logger), status(OK) {
 }
 
 void WaterLevelSensor::updateReadings(long novaLeitura)

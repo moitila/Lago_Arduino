@@ -8,16 +8,18 @@
 
 class ExternalCom {
     public:
-    ExternalCom(SoftwareSerial &ecSerial, WaterControlSystem &waterControl, LogManager &logger);
-    void run();
-
+        ExternalCom(SoftwareSerial &ecSerial, WaterControlSystem &waterControl, LogManager &logger);
+        void run();
+        void setWaterSystem(WaterControlSystem &waterSystem);
+        
     private:
-    SoftwareSerial &ecSerial;
-    WaterControlSystem &waterControl;
-    LogManager &logger;
-    void interpretMessage(String mensagem);
-    bool hasMessage();
-    void sendMessage(String message);
+        SoftwareSerial &ecSerial;
+        WaterControlSystem &waterControl;
+        LogManager &logger;
+
+        void interpretMessage(String mensagem);
+        bool hasMessage();
+        void sendMessage(String message);
 };
 
 #endif

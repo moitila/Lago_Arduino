@@ -1,9 +1,11 @@
+#include <EEPROM.h>
 #include <Arduino.h>
 #include <NewPing.h>
 #include <SoftwareSerial.h>
 #include "WaterControlSystem.h"
 #include "ExternalCom.h"
 #include "LogManager.h"
+#include "ConfigData.h"
 
 #define pinTrigLago 6
 #define pinEchoLago 5
@@ -15,16 +17,65 @@
 
 unsigned long lastSensorReadTime = 0;
 
-SoftwareSerial ecSerial(10,11);
+#define RX_PIN 10
+#define TX_PIN 11
+
+SoftwareSerial ecSerial(RX_PIN, TX_PIN);
 LogManager logger;
-WaterControlSystem waterSystem(pinTrigLago, pinEchoLago, pinTrigFiltro, pinEchoFiltro, pinBombaLago, pinBombaFiltro, logger);
+
+ConfigData readConfigFromEEPROM() {
+    ConfigData config;
+    EEPROM.get(0, config);
+    return config;
+}
+
+void writeConfigToEEPROM(const ConfigData &config) {
+    EEPROM.put(0, config);
+}
+
+void updateSetup(const ConfigData &config) {
+    writeConfigToEEPROM(config);
+    
+    // Reinicializa o sistema após um breve atraso
+    delay(2000);
+    asm volatile ("  jmp 0");
+}
+
+bool setSystemConfig(String jsonConfig) {
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, jsonConfig);
+    
+    if (error) {
+        return false;
+    }
+    
+    ConfigData config;
+    config.distMaximaAguaLago = doc["distMaximaAguaLago"];
+    config.distMinimaAguaLago = doc["distMinimaAguaLago"];
+    config.distMaximaAguaFiltro = doc["distMaximaAguaFiltro"];
+    config.distMinimaAguaFiltro = doc["distMinimaAguaFiltro"];
+    config.ultrasonicFailLimit = doc["ultrasonicFailLimit"];
+    config.ultrasonicReadInterval = doc["ultrasonicReadInterval"];
+    config.pumpDelay = doc["pumpDelay"];
+    config.logLigado = doc["logLigado"];
+    
+    updateSetup(config);
+    return true;
+}
+
+ConfigData config = readConfigFromEEPROM();
+WaterControlSystem waterSystem(pinTrigLago, pinEchoLago, pinTrigFiltro, pinEchoFiltro, pinBombaLago, pinBombaFiltro, logger, config);
 ExternalCom externalCom(ecSerial, waterSystem, logger);
 
 void setup()
 {
   Serial.begin(115200);
   ecSerial.begin(115200);
-  waterSystem.setSensorReadInterval(60000);
+  
+  waterSystem.setConfig(config.distMaximaAguaLago, config.distMinimaAguaLago, config.distMaximaAguaFiltro, 
+        config.distMinimaAguaFiltro, config.ultrasonicFailLimit, config.ultrasonicReadInterval, config.pumpDelay, config.logLigado);
+  
+   waterSystem.setSensorReadInterval(config.ultrasonicReadInterval);
 }
 
 void loop()

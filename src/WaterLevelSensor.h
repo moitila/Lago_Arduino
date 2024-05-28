@@ -1,8 +1,10 @@
 // WaterLevelSensor.h
 #ifndef WATERLEVELSENSOR_H
 #define WATERLEVELSENSOR_H
-#include "LogManager.h"
+
 #include <NewPing.h>
+#include "LogManager.h"
+
 
 enum WaterLevelStatus {
     EMPTY = 0,
@@ -12,36 +14,38 @@ enum WaterLevelStatus {
 
 class WaterLevelSensor {
 public:
-    WaterLevelSensor(int triggerPin, int echoPin, String nome, LogManager &logger);
+    WaterLevelSensor(int triggerPin, int echoPin, String nome, unsigned long distMaximaParaAgua, unsigned long distMinimaParaAgua, unsigned int limitfailures, LogManager &logger);
+    void updateReadings(long novaLeitura);
+    void updateMedia();
+    bool verifyReading(unsigned long value);
+    void handleAlert();
+    void updateStatus();
+    WaterLevelStatus getWaterLevelStatus();
     float getWaterLevel();
     float getMediaLeitura();
     void setDistanciaMinimaParaAgua(unsigned long distancia);
     unsigned long getDistanciaMinimaParaAgua() const;
     void setDistanciaMaximaParaAgua(unsigned long distancia);
     unsigned long getDistanciaMaximaParaAgua() const;
-    void setLimitFailures(unsigned int limit);
     int getStatus();
-    WaterLevelStatus getWaterLevelStatus();
-    void setNome(String nome_);
+    void setLimitFailures(unsigned int limit);
+    void setNome(String nome);
     String getNome();
 
 private:
-    WaterLevelStatus status;
+    int triggerPin;
+    int echoPin;
+    String nome;
     unsigned long distanciaMaximaParaAgua;
     unsigned long distanciaMinimaParaAgua;
     float media;
+    unsigned long leituras[3];
     unsigned int consecutivefailures;
-    const unsigned int limitfailures;
-    NewPing sonar;
-    long leituras[3];
+    unsigned int limitfailures;
     LogManager &logger;
-    String nome;
-
-    void updateReadings(long novaLeitura);
-    void updateMedia();
-    bool verifyReading(unsigned long value);
-    void handleAlert();
-    void updateStatus();
+    NewPing sonar;
+    WaterLevelStatus status;
+    
 };
 
 #endif // WATERLEVELSENSOR_H

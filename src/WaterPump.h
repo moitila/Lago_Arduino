@@ -2,20 +2,23 @@
 #define WATERPUMP_H
 
 #include <Arduino.h>
+#include "LogManager.h"
 
 class WaterPump {
 public:
-    WaterPump(int pumpPin, unsigned long delayTime);
+    WaterPump(const char* pumpName, int pumpPin, unsigned long delayTime, LogManager &logger);
     void start();
     void stop();
     bool getStatus();
     void setDelayTime(unsigned long delay);
 
 private:
+    const char* pumpName;
     int pumpPin;
+    unsigned long delayTime;
     bool isRunning;
     unsigned long lastChangeTime;
-    unsigned long delayTime;
+    LogManager &logger;
 };
 
 #endif
