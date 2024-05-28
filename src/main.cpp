@@ -22,15 +22,26 @@ unsigned long lastSensorReadTime = 0;
 
 SoftwareSerial ecSerial(RX_PIN, TX_PIN);
 LogManager logger;
-
+void writeConfigToEEPROM(const ConfigData &config) {
+    EEPROM.put(0, config);
+}
 ConfigData readConfigFromEEPROM() {
     ConfigData config;
     EEPROM.get(0, config);
-    return config;
-}
+    if (config.distMaximaAguaLago == 0xFFFF) {  // Supondo que 0xFFFF seja um valor inválido padrão
+      // Inicializar com valores padrão
+      config.distMaximaAguaLago = 100;
+      config.distMinimaAguaLago = 50;
+      config.distMaximaAguaFiltro = 100;
+      config.distMinimaAguaFiltro = 50;
+      config.ultrasonicFailLimit = 3;
+      config.ultrasonicReadInterval = 1000;
+      config.pumpDelay = 5000;
+      config.logLigado = true;
 
-void writeConfigToEEPROM(const ConfigData &config) {
-    EEPROM.put(0, config);
+      writeConfigToEEPROM(config);
+    }
+  return config;
 }
 
 void updateSetup(const ConfigData &config) {

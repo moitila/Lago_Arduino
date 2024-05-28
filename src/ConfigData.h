@@ -2,10 +2,10 @@
 #define CONFIGDATA_H
 
 struct ConfigData {
-    int distMaximaAguaLago;
-    int distMinimaAguaLago;
-    int distMaximaAguaFiltro;
-    int distMinimaAguaFiltro;
+    unsigned int distMaximaAguaLago;
+    unsigned int distMinimaAguaLago;
+    unsigned int distMaximaAguaFiltro;
+    unsigned int distMinimaAguaFiltro;
     int ultrasonicFailLimit;
     unsigned long ultrasonicReadInterval;
     unsigned long pumpDelay;
@@ -13,3 +13,4 @@ struct ConfigData {
 };
 
 #endif
+
