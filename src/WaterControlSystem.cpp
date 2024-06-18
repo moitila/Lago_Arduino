@@ -49,19 +49,19 @@ void WaterControlSystem::updateStatusBombas(int statusSistema)
   {
     switch (statusSistema)
     {
-    case 1:
+    case BOMBAS_DESLIGADAS:
       bombaLago.stop();
       bombaFiltro.stop();
       break;
-    case 2:
+    case APENAS_FILTRO:
       bombaLago.stop();
       bombaFiltro.start();
       break;
-    case 3:
+    case APENAS_LAGO:
       bombaLago.start();
       bombaFiltro.stop();
       break;
-    case 4:
+    case AMBAS_LIGADAS:
       bombaLago.start();
       bombaFiltro.start();
       break;
@@ -75,13 +75,13 @@ void WaterControlSystem::updateStatusBombas(int statusSistema)
 
 StatusSistema WaterControlSystem::getStatusSistema(WaterLevelStatus statusLago, WaterLevelStatus statusFiltro) {
     if (statusLago == OK && statusFiltro == OK) {
-        return BOMBAS_DESLIGADAS; // Níveis de água estão em condições ideais
+        return AMBAS_LIGADAS; // Níveis de água estão em condições ideais
     } else if (statusLago == EMPTY && statusFiltro == FULL) {
         return APENAS_FILTRO; // Necessidade de transferir água do filtro para o lago
     } else if (statusLago == FULL && statusFiltro == EMPTY) {
         return APENAS_LAGO; // Necessidade de transferir água do lago para o filtro
     } else if (statusLago == EMPTY || statusFiltro == EMPTY) {
-        return AMBAS_LIGADAS; // Necessidade de ativação de ambas as bombas para correção de nível
+        return BOMBAS_DESLIGADAS; // Necessidade de ativação de ambas as bombas para correção de nível
     } else {
         return ERRO; // Alguma condição não atendida ou erro de leitura
     }
