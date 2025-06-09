@@ -81,7 +81,7 @@ StatusSistema WaterControlSystem::getStatusSistema(WaterLevelStatus statusLago, 
     } else if (statusLago == FULL && statusFiltro == EMPTY) {
         return APENAS_LAGO; // Necessidade de transferir água do lago para o filtro
     } else if (statusLago == EMPTY || statusFiltro == EMPTY) {
-        return BOMBAS_DESLIGADAS; // Necessidade de ativação de ambas as bombas para correção de nível
+        return BOMBAS_DESLIGADAS; // Ambas as bombas devem permanecer desligadas ou o sistema está parando-as
     } else {
         return ERRO; // Alguma condição não atendida ou erro de leitura
     }
