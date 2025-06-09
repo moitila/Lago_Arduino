@@ -1,10 +1,15 @@
 #include "WaterLevelSensor.h"
 
 
-WaterLevelSensor::WaterLevelSensor(int triggerPin, int echoPin, const String nome, unsigned long distMaximaParaAgua, unsigned long distMinimaParaAgua, unsigned int limitfailures, LogManager &logger)
-    : sonar(triggerPin, echoPin, 150), triggerPin(triggerPin), echoPin(echoPin), nome(nome),
-      distanciaMaximaParaAgua(distMaximaParaAgua), distanciaMinimaParaAgua(distMinimaParaAgua), media(0),
-      consecutivefailures(0), limitfailures(limitfailures), logger(logger), status(OK) {
+WaterLevelSensor::WaterLevelSensor(int triggerPin, int echoPin, const String nome,
+                                   unsigned long distMaximaParaAgua,
+                                   unsigned long distMinimaParaAgua,
+                                   unsigned int limitfailures, LogManager &logger)
+    : sonar(triggerPin, echoPin, 150), triggerPin(triggerPin), echoPin(echoPin),
+      nome(nome), distanciaMaximaParaAgua(distMaximaParaAgua),
+      distanciaMinimaParaAgua(distMinimaParaAgua), media(0),
+      leituras{0, 0, 0}, consecutivefailures(0), limitfailures(limitfailures),
+      logger(logger), status(OK) {
 }
 
 void WaterLevelSensor::updateReadings(long novaLeitura)
@@ -89,7 +94,8 @@ void WaterLevelSensor::updateReadings(long novaLeitura)
   int WaterLevelSensor::getStatus() { return status; }
   
   void WaterLevelSensor::setLimitFailures(unsigned int limit){
-    this->consecutivefailures = limit;
+    this->limitfailures = limit;
+    this->consecutivefailures = 0;
   }
   void WaterLevelSensor::setNome(String nome_){
     this->nome = nome_;
